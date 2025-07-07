@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 1. load your document
-pdf_path = "./streamlit/movie_reviews.pdf" # your document path
+pdf_path = "./movie_reviews.pdf" # your document path
 doc = fitz.open(pdf_path)
 
 documents = []
@@ -33,7 +33,7 @@ doc.close()
 embeddings = OllamaEmbeddings(model="mxbai-embed-large")
 
 #3. create chroma db to store your document
-db_location = "./streamlit/chroma_db" # location where you wanna store your db
+db_location = "./chroma_db" # location where you wanna store your db
 vector_store = Chroma(
     collection_name="your-document",
     persist_directory=db_location,
@@ -48,7 +48,7 @@ retriever = vector_store.as_retriever(search_kwargs={"k": 5}) # set k base on ho
 
 #6. setup streamlit interface
 st.set_page_config(page_title="Streaming Agent", page_icon="🤖")
-st.title("VietHa-knowyourdocs 🥷")
+st.title("VietHa-knowyourdocs ♌")
 
 #7. define a function to get the response from your agent
 def get_response(query, chat_history):
@@ -60,7 +60,7 @@ def get_response(query, chat_history):
     """
 
     prompt = ChatPromptTemplate.from_template(template)
-    model = OllamaLLM(model="llama3.2")
+    model = OllamaLLM(model="local_ai")
     chain = prompt | model
     context = retriever.invoke(query)
     
