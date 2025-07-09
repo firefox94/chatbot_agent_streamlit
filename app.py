@@ -60,7 +60,7 @@ def get_response(query, chat_history):
     """
 
     prompt = ChatPromptTemplate.from_template(template)
-    model = OllamaLLM(model="local_ai")
+    model = OllamaLLM(model="llama3.2")
     chain = prompt | model
     context = retriever.invoke(query)
     
