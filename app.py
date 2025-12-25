@@ -1,7 +1,7 @@
 import fitz  # PyMuPDF
 from langchain_ollama import OllamaEmbeddings
 from langchain_core.documents import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage
@@ -26,7 +26,12 @@ for page_num in range(len(doc)):
             metadata={"page": page_num + 1}  # mark your metadata in case you wanna know which pages have been used
         )
         documents.append(document)
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=50
+)
 
+documents = text_splitter.split_documents(documents)
 doc.close()
 
 #2. create embedding instance
@@ -41,10 +46,11 @@ vector_store = Chroma(
 )
 
 #4. store document in vector store and keep renewing your db whenever you run this app
-vector_store.add_documents(documents)
+if vector_store._collection.count() == 0:
+    vector_store.add_documents(documents)
 
 #5. create retriever
-retriever = vector_store.as_retriever(search_kwargs={"k": 5}) # set k base on how many docs to return
+retriever = vector_store.as_retriever(search_kwargs={"k": 3}) # set k base on how many docs to return
 
 #6. setup streamlit interface
 st.set_page_config(page_title="Streaming Agent", page_icon="🤖")
@@ -54,15 +60,19 @@ st.title("VietHa-knowyourdocs ♌")
 def get_response(query, chat_history):
     template = """
     You are an expert in so many domains, especialty good at summarizing information.
+    Use ONLY the data below to answer.
     Chat history: {chat_history}
     Here are the data need to summary: {context}
     Here is the question: {query}
     """
 
     prompt = ChatPromptTemplate.from_template(template)
-    model = OllamaLLM(model="llama3.2")
+    model = OllamaLLM(model="qwen3:8b")
     chain = prompt | model
-    context = retriever.invoke(query)
+    # context = retriever.invoke(query)
+    docs = retriever.invoke(query)
+    context = "\n\n".join([doc.page_content for doc in docs])
+
     
     return chain.invoke({
         "chat_history": chat_history,
